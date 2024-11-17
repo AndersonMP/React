@@ -7,6 +7,9 @@ import {
   TextInput,
   Button,
   Alert,
+  TouchableHighlight,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -63,9 +66,6 @@ let productos = [
   },
 ];
 
-let indiciSeleccionado = -1;
-let esNuevo = true;
-
 export default function App() {
   const [txtID, setTxtID] = useState("");
   const [txtNombre, setTxtNombre] = useState("");
@@ -73,10 +73,16 @@ export default function App() {
   const [txtPreCom, setTxtPreCom] = useState("");
   const [txtPreVen, setTxtPreVen] = useState("");
   const [numElementos, setNumElementos] = useState(productos.length);
-
+  //El modal solo se muestra cuando tiene el valor de un índice
+  // Es decir si es null no se mostrará
+  // Si el indice del modal es igual al indice del producto seleccionado
+  // Se muestra el modal
+  const [modalVisible, setModalVisible] = useState(-1);
+  const [indiciSeleccionado, setIndiciSeleccionado] = useState(-1);
+  const [esNuevo, setEsNuevo] = useState(true);
   useEffect(() => {
     if (txtPreCom) {
-      setTxtPreVen((parseFloat(txtPreCom) * 1.2).toFixed(2)); 
+      setTxtPreVen((parseFloat(txtPreCom) * 1.2).toFixed(2));
     } else {
       setTxtPreVen("");
     }
@@ -134,47 +140,93 @@ export default function App() {
     setTxtCategoria("");
     setTxtPreCom("");
     setTxtPreVen("");
-    esNuevo = true;
   };
 
-  let ItemProducto = (props) => {
+  function EditButton({ onPress }) {
+    return (
+      <TouchableHighlight
+        activeOpacity={0.6}
+        underlayColor="lightblue"
+        onPress={onPress}
+        style={{
+          padding: 8,
+          paddingHorizontal: 12,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "purple",
+        }}
+      >
+        <Text style={{ color: "white", fontWeight: "bold" }}>E</Text>
+      </TouchableHighlight>
+    );
+  }
+  let ItemProducto = ({ indice, producto }) => {
     return (
       <View style={styles.ItemProducto}>
         <View style={styles.areaIndice}>
-          <Text>{props.indice + 1}</Text>
+          <Text>{indice + 1}</Text>
         </View>
         <View style={styles.itemContenido}>
           <Text style={styles.textoPrincipal}>
-            {props.producto.nombre} ${props.producto.precioVenta}
+            {producto.nombre} ${producto.precioVenta}
           </Text>
           <Text style={styles.textoSecundario}>
-            {props.producto.id} {props.producto.categoria} $
-            {props.producto.precioCompra}
+            {producto.id} {producto.categoria} ${producto.precioCompra}
           </Text>
         </View>
         <View style={styles.itemBotones}>
-          <Button
-            title=" E "
-            color="purple"
+          <EditButton
             onPress={() => {
-              setTxtID(props.producto.id.toString());
-              setTxtNombre(props.producto.nombre);
-              setTxtCategoria(props.producto.categoria);
-              setTxtPreCom(props.producto.precioCompra.toString());
-              setTxtPreVen(props.producto.precioVenta.toString());
-              indiciSeleccionado = props.indice;
-              esNuevo = false;
+              setTxtID(producto.id.toString());
+              setTxtNombre(producto.nombre);
+              setTxtCategoria(producto.categoria);
+              setTxtPreCom(producto.precioCompra.toString());
+              setTxtPreVen(producto.precioVenta.toString());
+              setIndiciSeleccionado(indice);
+              setEsNuevo(false);
             }}
           />
           <Button
             title=" X "
             color="red"
             onPress={() => {
-              indiciSeleccionado = props.indice;
-              productos.splice(props.indice, 1);
-              setNumElementos(productos.length);
+              setIndiciSeleccionado(indice);
+              setModalVisible(indice);
             }}
           />
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible == indice}
+            onRequestClose={() => setModalVisible(null)}
+          >
+            <View style={styles.centeredView}>
+              <View style={styles.modalView}>
+                <Text style={styles.modalText}>
+                  ¿Está seguro de borrar el producto de la lista?
+                </Text>
+                <View style={styles.buttonContainer}>
+                  <Pressable
+                    style={[styles.button, styles.buttonClose]}
+                    onPress={() => setModalVisible(null)}
+                  >
+                    <Text style={styles.textStyle}>Cancelar</Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.button, styles.buttonConfirm]}
+                    onPress={() => {
+                      productos.splice(indiciSeleccionado, 1);
+                      setNumElementos(productos.length);
+                      setModalVisible(null);
+                      limpiar();
+                    }}
+                  >
+                    <Text style={styles.textStyle}>Confirmar</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          </Modal>
         </View>
       </View>
     );
@@ -230,11 +282,9 @@ export default function App() {
         <FlatList
           style={styles.list}
           data={productos}
-          renderItem={(object) => {
-            return (
-              <ItemProducto indice={object.index} producto={object.item} />
-            );
-          }}
+          renderItem={({ index, item }) => (
+            <ItemProducto indice={index} producto={item} />
+          )}
           keyExtractor={(item) => item.id.toString()}
         />
       </View>
@@ -289,6 +339,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontStyle: "italic",
     color: "#555",
+    textDecorationLine: "none",
   },
   areaCabecera: {
     backgroundColor: "#E8F5E9",
@@ -356,5 +407,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-evenly",
     marginVertical: 10,
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: "space-evenly",
+    alignItems: "center",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    width: "100%",
+    marginTop: 20,
+  },
+  modalView: {
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 20,
+    width: "80%",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  button: {
+    borderRadius: 5,
+    padding: 10,
+    elevation: 2,
+    marginHorizontal: 10,
+    width: 100,
+  },
+  buttonClose: {
+    backgroundColor: "#FF4B5C", 
+  },
+  buttonConfirm: {
+    backgroundColor: "#4CAF50", 
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 15,
+    textAlign: "center",
+    fontWeight: "bold",
   },
 });

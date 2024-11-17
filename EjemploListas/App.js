@@ -67,27 +67,27 @@ export default function App() {
     esNuevo = true;
   };
 
-  let ItemPersona = (props) => {
+  let ItemPersona = ({ indice, persona }) => {
     return (
       <View style={styles.itemPersona}>
         <View style={styles.areaIndice}>
-          <Text>{props.indice + 1}</Text>
+          <Text>{indice + 1}</Text>
         </View>
         <View style={styles.itemContenido}>
           <Text style={styles.textoPrincipal}>
-            {props.persona.nombre} {props.persona.apellido}
+            {persona.nombre} {persona.apellido}
           </Text>
-          <Text style={styles.textoSecundario}>{props.persona.cedula}</Text>
+          <Text style={styles.textoSecundario}>{persona.cedula}</Text>
         </View>
         <View style={styles.itemBotones}>
           <Button
             title=" E "
             color="purple"
             onPress={() => {
-              setTxtCedula(props.persona.cedula.toString());
-              setTxtNombre(props.persona.nombre);
-              setTxtApellido(props.persona.apellido);
-              indiciSeleccionado = props.indice;
+              setTxtCedula(persona.cedula.toString());
+              setTxtNombre(persona.nombre);
+              setTxtApellido(persona.apellido);
+              indiciSeleccionado = indice;
               esNuevo = false;
             }}
           />
@@ -95,7 +95,7 @@ export default function App() {
             title=" X "
             color="red"
             onPress={() => {
-              indiciSeleccionado = props.indice;
+              indiciSeleccionado = indice;
               personas.splice(indiciSeleccionado, 1);
               setNumElementos(personas.length);
             }}
@@ -152,9 +152,9 @@ export default function App() {
         <FlatList
           style={styles.list}
           data={personas}
-          renderItem={(object) => {
-            return <ItemPersona indice={object.index} persona={object.item} />;
-          }}
+          renderItem={({ index, item }) => (
+            <ItemPersona indice={index} item={item} />
+          )}
           keyExtractor={(item) => item.cedula.toString()}
         />
       </View>
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 5,
     marginHorizontal: 20,
-    gap: 5
+    gap: 5,
   },
   txtStyle: {
     borderWidth: 1,
@@ -279,4 +279,3 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 });
-
