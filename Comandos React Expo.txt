@@ -1,3 +1,16 @@
+// Crear Proyecto con JSX
 npx create-expo-app@latest projectName --template blank
 cd projectName
 npx expo install react-dom react-native-web @expo/metro-runtime
+
+//Migrar o actualizar
+npx expo install expo@latest
+npm install expo-status-bar@~2.0.0 react@18.3.1 react-native@0.76.3
+npm install @react-navigation/native @react-navigation/native-stack react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated react-native-vector-icons react-native-get-random-values
+npm install react-native-gesture-handler@~2.20.2 react-native-safe-area-context@4.12.0 react-native-screens@~4.1.0
+
+
+// En caso de proyectos antiguos
+npm install -g expo-cli
+npx expo-cli upgrade
+
